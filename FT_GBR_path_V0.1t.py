@@ -145,13 +145,30 @@ TTDir = 'M06TT/'
 # mse_compared = 1
 # best_model = ""
 # final_pred = ""
+
+# weather station list:
+# "467571"
+# "C0A9A0"
+# "C0A9E0"
+# "C0ACA0"
+# "C0AD30"
+# "C0C480"
+# "C0C540"
+# "C0C650"
+
+
+
 if __name__ == "__main__":
-    with open("weather.pickle", 'rb') as f:
+    with open("./weather/weather2.pickle", 'rb') as f:
         station = pickle.load(f)
-    trainData = np.load("./array_files_0101/train_data_9.npy")
-    testData = np.load("./array_files_0101/test_data_9.npy")
-    trainTarget = np.load("./array_files_0101/train_target_9.npy")
-    testTarget = np.load("./array_files_0101/test_target_9.npy")
+    trainData = np.load("./array_files_0101/train_data_4.npy")
+    testData = np.load("./array_files_0101/test_data_4.npy")
+    trainTarget = np.load("./array_files_0101/train_target_4.npy")
+    testTarget = np.load("./array_files_0101/test_target_4.npy")
+
+    df_flow = pd.read_csv("./has_flow_data.csv").drop(columns=["Unnamed: 0"])
+    trainFlow = df_flow[0:trainData.shape[0]]
+    testFlow = df_flow[trainData.shape[0]:testData.shape[0]+trainData.shape[0]]
 
     trainData = pd.DataFrame(trainData)
     testData = pd.DataFrame(testData)
@@ -165,9 +182,13 @@ if __name__ == "__main__":
     trainData = pd.concat([trainData, calendar_train], axis=1)
     testData = pd.concat([testData, calendar_test.reset_index(drop=True)], axis=1)
 
-    # for sta in station:
-    #     trainData = pd.concat([trainData, station[sta]["pd_training"]], axis=1)
-    #     testData = pd.concat([testData, station[sta]["pd_testing"]], axis=1)
+    trainData = pd.concat([trainData, trainFlow], axis=1)
+    testData = pd.concat([testData, testFlow.reset_index(drop=True)], axis=1)
+
+    # weather
+    for sta in station:
+        trainData = pd.concat([trainData, station[sta]["pd_training"]], axis=1)
+        testData = pd.concat([testData, station[sta]["pd_testing"]], axis=1)
     #
     # for i, c in zip(trainData.dtypes, trainData.columns):
     #     print(i, c)
