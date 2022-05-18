@@ -17,7 +17,9 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestClassifier
 
-#os.chdir('D:/TIP/TT')
+import pickle
+
+# os.chdir('D:/TIP/TT')
 TTDir = 'M06TT/'
 #
 # day1 = datetime.strptime('20150101', "%Y%m%d")
@@ -106,49 +108,74 @@ TTDir = 'M06TT/'
 #     np.save('array_files/test_target_%d.npy'%pathid, testTarget)
 #
 #     continue
-    #print(trainData.dtype)
+# print(trainData.dtype)
 
-    #df_train_data = pd.DataFrame(trainData)
-    #df_train_target = pd.DataFrame(trainTarget)
-    #df_test_data = pd.DataFrame(testData)
-    #df_test_target = pd.DataFrame(testTarget)
-    
-    #df_train_data.to_csv("train_data.csv")
-    #df_train_target.to_csv("train_target.csv")
-    #df_test_data.to_csv("test_data.csv")
-    #df_test_target.to_csv("test_target.csv")
+# df_train_data = pd.DataFrame(trainData)
+# df_train_target = pd.DataFrame(trainTarget)
+# df_test_data = pd.DataFrame(testData)
+# df_test_target = pd.DataFrame(testTarget)
 
-    #trainData = np.load("array_files/train_data_%d.npy"%pathid)
-    #trainTarget = np.load("array_files/train_target_%d.npy"%pathid)
-    #testData = np.load("array_files/test_data_%d.npy"%pathid)
-    #testTarget = np.load("array_files/test_target_%d.npy"%pathid)
-    #haha
-    # alpha = 0.48
-    #
-    # n_estimators_s = [50, 100, 200, 300]
-    # max_depth_s = [5, 7, 9, 11]
-    # loss_s = ['quantile']
-    # min_samples_leaf_s = [50, 100,150]
-    # min_samples_split_s = [50, 100, 150]
-    # max_features_s = ['auto', 'sqrt']
+# df_train_data.to_csv("train_data.csv")
+# df_train_target.to_csv("train_target.csv")
+# df_test_data.to_csv("test_data.csv")
+# df_test_target.to_csv("test_target.csv")
 
-    #n_estimators_s = [50, 100]
-    #max_depth_s = [5]
-    #loss_s = ['quantile']
-    #min_samples_leaf_s = [50]
-    #min_samples_split_s = [50]
-    #max_features_s = ['auto', 'sqrt']
+# trainData = np.load("array_files/train_data_%d.npy"%pathid)
+# trainTarget = np.load("array_files/train_target_%d.npy"%pathid)
+# testData = np.load("array_files/test_data_%d.npy"%pathid)
+# testTarget = np.load("array_files/test_target_%d.npy"%pathid)
+# haha
+# alpha = 0.48
+#
+# n_estimators_s = [50, 100, 200, 300]
+# max_depth_s = [5, 7, 9, 11]
+# loss_s = ['quantile']
+# min_samples_leaf_s = [50, 100,150]
+# min_samples_split_s = [50, 100, 150]
+# max_features_s = ['auto', 'sqrt']
 
-    # mape_compared = 1
-    # mse_compared = 1
-    # best_model = ""
-    # final_pred = ""
+# n_estimators_s = [50, 100]
+# max_depth_s = [5]
+# loss_s = ['quantile']
+# min_samples_leaf_s = [50]
+# min_samples_split_s = [50]
+# max_features_s = ['auto', 'sqrt']
+
+# mape_compared = 1
+# mse_compared = 1
+# best_model = ""
+# final_pred = ""
 if __name__ == "__main__":
-    trainData = np.load("./array_files_0101/train_data_3.npy")
-    testData = np.load("./array_files_0101/test_data_3.npy")
-    trainTarget = np.load("./array_files_0101/train_target_3.npy")
-    testTarget = np.load("./array_files_0101/test_target_3.npy")
-    clf = GradientBoostingRegressor(n_estimators=100, random_state=42)
+    with open("weather.pickle", 'rb') as f:
+        station = pickle.load(f)
+    trainData = np.load("./array_files_0101/train_data_9.npy")
+    testData = np.load("./array_files_0101/test_data_9.npy")
+    trainTarget = np.load("./array_files_0101/train_target_9.npy")
+    testTarget = np.load("./array_files_0101/test_target_9.npy")
+
+    trainData = pd.DataFrame(trainData)
+    testData = pd.DataFrame(testData)
+
+    calendar = pd.read_csv("calendar_final.csv")
+    calendar = calendar.loc[calendar.index.repeat(12 * 24)].reset_index(drop=True)
+
+    calendar_train = calendar[0:trainData.shape[0]]
+    calendar_test = calendar[trainData.shape[0]:]
+
+    trainData = pd.concat([trainData, calendar_train], axis=1)
+    testData = pd.concat([testData, calendar_test.reset_index(drop=True)], axis=1)
+
+    # for sta in station:
+    #     trainData = pd.concat([trainData, station[sta]["pd_training"]], axis=1)
+    #     testData = pd.concat([testData, station[sta]["pd_testing"]], axis=1)
+    #
+    # for i, c in zip(trainData.dtypes, trainData.columns):
+    #     print(i, c)
+    # print(trainData["降水量"][0])
+    # trainData = trainData.astype(np.float)
+    # testData = testData.astype(np.float)
+
+    clf = GradientBoostingRegressor(n_estimators=100, random_state=87)
     clf.fit(trainData, trainTarget)
 
     testPrdct = clf.predict(testData)
@@ -160,7 +187,7 @@ if __name__ == "__main__":
     print(f"trainData:{trainData.shape}")
     print(f"mse:{mse}")
     print(f"mape:{mape}")
-
+    print()
     # for n_estimators in n_estimators_s:
     #     for max_depth in max_depth_s:
     #         for loss in loss_s:
@@ -174,7 +201,7 @@ if __name__ == "__main__":
     #                                                         min_samples_split=min_samples_split,
     #                                                         max_features=max_features, random_state=187)
 
-                            #clf = RandomForestClassifier(random_state=187)
+    # clf = RandomForestClassifier(random_state=187)
 
     #                         clf.fit(trainData, trainTarget)
     #
@@ -206,7 +233,7 @@ if __name__ == "__main__":
     #     f.write(str(mse_compared) + '\n')
     #     f.write(str(best_model) + '\n')
 
-    #print(mape, mse)
+    # print(mape, mse)
 
 
 
